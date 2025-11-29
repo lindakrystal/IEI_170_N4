@@ -1,22 +1,26 @@
 """
 Django settings for config project.
+Configuración final con DRF, filtros, swagger y permisos PRO.
 """
 
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ---------------------------------------------------------
 # SECURITY
+# ---------------------------------------------------------
+
 SECRET_KEY = 'django-insecure--c7pmeu1fk79x-t*1e0k_^7_b$(@s66o@bdn*853a@4g4teg+-'
 DEBUG = True
 ALLOWED_HOSTS = []
 
 # ---------------------------------------------------------
-# APPS
+# APLICACIONES INSTALADAS
 # ---------------------------------------------------------
 
 INSTALLED_APPS = [
-    # Django apps base
+    # Base Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,16 +32,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-    # Filtros
+    # Filtros y ordenamiento
     'django_filters',
 
     # Documentación Swagger
     'drf_yasg',
 
-    # CORS para permitir frontend React
+    # CORS para frontend externo
     'corsheaders',
 
-    # Tu aplicación
+    # App del proyecto
     'inventario',
 ]
 
@@ -49,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
 
-    # IMPORTANTE: debe ir arriba
+    # CORS debe ir arriba
     'corsheaders.middleware.CorsMiddleware',
 
     'django.middleware.common.CommonMiddleware',
@@ -94,7 +98,7 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------
-# PASSWORD VALIDATION
+# VALIDACIÓN DE CONTRASEÑAS
 # ---------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -105,53 +109,58 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ---------------------------------------------------------
-# INTERNATIONALIZATION
+# INTERNACIONALIZACIÓN
 # ---------------------------------------------------------
 
 LANGUAGE_CODE = 'es-cl'
 TIME_ZONE = 'America/Santiago'
+
 USE_I18N = True
 USE_TZ = True
 
 # ---------------------------------------------------------
-# STATIC FILES
+# ARCHIVOS ESTÁTICOS
 # ---------------------------------------------------------
 
 STATIC_URL = 'static/'
 
-# ---------------------------------------------------------
-# DEFAULT PRIMARY KEY FIELD TYPE
-# ---------------------------------------------------------
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------
-# REST FRAMEWORK CONFIG (CORREGIDO)
+# CONFIGURACIÓN REST FRAMEWORK (PRO)
 # ---------------------------------------------------------
 
 REST_FRAMEWORK = {
+    # Autenticación por Token
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+
+    # Permisos globales: autenticación requerida
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
+
+    # Filtros, búsqueda y ordenamiento global
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+
+    # Paginación global
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 
 # ---------------------------------------------------------
-# CORS CONFIGURACIÓN
+# CONFIGURACIÓN CORS
 # ---------------------------------------------------------
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",   # React u otro frontend
 ]
 
-CORS_ALLOW_HEADERS = ["*"]
 CORS_ALLOW_METHODS = ["*"]
+CORS_ALLOW_HEADERS = ["*"]
+CORS_ALLOW_CREDENTIALS = True

@@ -9,41 +9,84 @@ from .serializers import (
     MovimientoStockSerializer
 )
 
-# ==============================
-#   CATEGORÍAS
-# ==============================
+
+# ----------------------------
+# CATEGORÍA
+# ----------------------------
+
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = [permissions.AllowAny]   # 👈 DESBLOQUEADO
+    permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["nombre"]
+    ordering_fields = ["nombre"]
 
 
-# ==============================
-#   PROVEEDORES
-# ==============================
+# ----------------------------
+# PROVEEDOR
+# ----------------------------
+
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer
-    permission_classes = [permissions.AllowAny]   # 👈 DESBLOQUEADO
+    permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["nombre", "correo"]
+    ordering_fields = ["nombre"]
 
 
-# ==============================
-#   PRODUCTOS
-# ==============================
+# ----------------------------
+# PRODUCTO (PRO)
+# ----------------------------
+
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.select_related('categoria', 'proveedor').all()
+    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.AllowAny]   # 👈 DESBLOQUEADO
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['categoria', 'proveedor', 'stock']
-    search_fields = ['nombre', 'sku']
-    ordering_fields = ['nombre', 'sku', 'stock']
+    permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+
+    # FILTROS POR CATEGORÍA, PROVEEDOR Y STOCK
+    filterset_fields = {
+        "categoria": ["exact"],
+        "proveedor": ["exact"],
+        "stock": ["gte", "lte"],   # mayor o menor stock
+    }
+
+    # BÚSQUEDAS
+    search_fields = ["nombre", "sku"]
+
+    # ORDENAMIENTO
+    ordering_fields = ["nombre", "sku", "stock", "precio"]
 
 
-# ==============================
-#   MOVIMIENTOS DE STOCK
-# ==============================
+# ----------------------------
+# MOVIMIENTO DE STOCK (PRO)
+# ----------------------------
+
 class MovimientoStockViewSet(viewsets.ModelViewSet):
-    queryset = MovimientoStock.objects.select_related('producto').all()
+    queryset = MovimientoStock.objects.all()
     serializer_class = MovimientoStockSerializer
-    permission_classes = [permissions.AllowAny]   # 👈 DESBLOQUEADO
+    permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+
+    filterset_fields = {
+        "producto": ["exact"],
+        "tipo": ["exact"],      # Entrada o salida
+        "fecha": ["gte", "lte"],  # rango de fechas
+    }
+
+    search_fields = ["nota", "producto__nombre"]
+    ordering_fields = ["fecha", "cantidad"]
