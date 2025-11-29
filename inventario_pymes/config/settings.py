@@ -1,6 +1,6 @@
 """
 Django settings for config project.
-Configuración final con DRF, filtros, swagger y permisos PRO.
+Configuración final con DRF, filtros, Swagger, CORS y permisos para frontend.
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # ---------------------------------------------------------
-# APLICACIONES INSTALADAS
+# APPS INSTALADAS
 # ---------------------------------------------------------
 
 INSTALLED_APPS = [
@@ -32,16 +32,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-    # Filtros y ordenamiento
+    # Filtros
     'django_filters',
 
     # Documentación Swagger
     'drf_yasg',
 
-    # CORS para frontend externo
+    # CORS para permitir el frontend en 5173
     'corsheaders',
 
-    # App del proyecto
+    # App del inventario
     'inventario',
 ]
 
@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
 
-    # CORS debe ir arriba
+    # CORS debe ir aquí arriba
     'corsheaders.middleware.CorsMiddleware',
 
     'django.middleware.common.CommonMiddleware',
@@ -98,7 +98,7 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------
-# VALIDACIÓN DE CONTRASEÑAS
+# PASSWORD VALIDATION
 # ---------------------------------------------------------
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -127,18 +127,19 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------
-# CONFIGURACIÓN REST FRAMEWORK (PRO)
+# CONFIGURACIÓN REST FRAMEWORK (FINAL)
 # ---------------------------------------------------------
 
 REST_FRAMEWORK = {
-    # Autenticación por Token
+    # Token authentication disponible (opcional)
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
 
-    # Permisos globales: autenticación requerida
+    # 🔥 PERMISO GLOBAL → PERMITE EL FRONTEND SIN LOGIN
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 
     # Filtros, búsqueda y ordenamiento global
@@ -148,17 +149,17 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
 
-    # Paginación global
+    # Paginación
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 
 # ---------------------------------------------------------
-# CONFIGURACIÓN CORS
+# CONFIGURACIÓN CORS PARA TU FRONTEND EN 5173
 # ---------------------------------------------------------
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",   # React u otro frontend
+    "http://localhost:5173",
 ]
 
 CORS_ALLOW_METHODS = ["*"]
