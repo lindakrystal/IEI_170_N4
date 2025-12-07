@@ -59,7 +59,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 
 # ----------------------------
-# MOVIMIENTO DE STOCK (PRO)
+
 # ----------------------------
 
 class MovimientoStockSerializer(serializers.ModelSerializer):

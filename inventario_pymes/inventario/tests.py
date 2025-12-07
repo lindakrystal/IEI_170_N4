@@ -125,7 +125,7 @@ class TestMovimientoStockAPI(BaseTestCase):
         data = {
             "producto": self.producto.id,
             "tipo": "OUT",
-            "cantidad": 999,  # mucho más del stock
+            "cantidad": 999,  
         }
 
         response = self.client.post("/api/movimientos/", data)

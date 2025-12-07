@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     # Documentación Swagger
     'drf_yasg',
 
-    # CORS para permitir el frontend en 5173
+    # CORS para permitir el frontend
     'corsheaders',
 
     # App del inventario
@@ -131,35 +131,35 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------------------------------------
 
 REST_FRAMEWORK = {
-    # Token authentication disponible (opcional)
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 
-    # 🔥 PERMISO GLOBAL → PERMITE EL FRONTEND SIN LOGIN
+    # 🔥 PERMITE QUE EL FRONTEND USE LA API SIN LOGIN
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
 
-    # Filtros, búsqueda y ordenamiento global
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
 
-    # Paginación
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
 
 # ---------------------------------------------------------
-# CONFIGURACIÓN CORS PARA TU FRONTEND EN 5173
+# CONFIGURACIÓN CORS (CORREGIDA)
 # ---------------------------------------------------------
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
 ]
 
 CORS_ALLOW_METHODS = ["*"]
