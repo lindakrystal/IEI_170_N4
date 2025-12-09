@@ -1,6 +1,5 @@
 """
 Django settings for config project.
-Configuración final con DRF, filtros, Swagger, CORS y permisos para frontend.
 """
 
 from pathlib import Path
@@ -8,19 +7,19 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------
-# SECURITY
+# SEGURIDAD
 # ---------------------------------------------------------
 
 SECRET_KEY = 'django-insecure--c7pmeu1fk79x-t*1e0k_^7_b$(@s66o@bdn*853a@4g4teg+-'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # ---------------------------------------------------------
-# APPS INSTALADAS
+# APPS
 # ---------------------------------------------------------
 
 INSTALLED_APPS = [
-    # Base Django
+    # Django base
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,10 +37,10 @@ INSTALLED_APPS = [
     # Documentación Swagger
     'drf_yasg',
 
-    # CORS para permitir el frontend
+    # CORS para conectar React
     'corsheaders',
 
-    # App del inventario
+    # Tu app
     'inventario',
 ]
 
@@ -51,11 +50,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',   # CORS arriba
     'django.contrib.sessions.middleware.SessionMiddleware',
-
-    # CORS debe ir aquí arriba
-    'corsheaders.middleware.CorsMiddleware',
-
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -63,16 +59,20 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ---------------------------------------------------------
+# URLS PRINCIPALES
+# ---------------------------------------------------------
+
 ROOT_URLCONF = 'config.urls'
 
 # ---------------------------------------------------------
-# TEMPLATES
+# TEMPLATES (REQUERIDO PARA ADMIN)
 # ---------------------------------------------------------
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],   # Si usas templates futuros, aquí van
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,10 +84,14 @@ TEMPLATES = [
     },
 ]
 
+# ---------------------------------------------------------
+# WSGI
+# ---------------------------------------------------------
+
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # ---------------------------------------------------------
-# DATABASE
+# BASE DE DATOS
 # ---------------------------------------------------------
 
 DATABASES = {
@@ -98,18 +102,28 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------
-# PASSWORD VALIDATION
+# AUTENTICACIÓN
 # ---------------------------------------------------------
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',   # Permite acceso al frontend
+    ],
+}
 
 # ---------------------------------------------------------
-# INTERNACIONALIZACIÓN
+# CORS
+# ---------------------------------------------------------
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = ["*"]
+CORS_ALLOW_METHODS = ["*"]
+
+# ---------------------------------------------------------
+# REGIÓN / IDIOMAS
 # ---------------------------------------------------------
 
 LANGUAGE_CODE = 'es-cl'
@@ -119,49 +133,13 @@ USE_I18N = True
 USE_TZ = True
 
 # ---------------------------------------------------------
-# ARCHIVOS ESTÁTICOS
+# ESTÁTICOS
 # ---------------------------------------------------------
 
 STATIC_URL = 'static/'
 
+# ---------------------------------------------------------
+# DEFAULT
+# ---------------------------------------------------------
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# ---------------------------------------------------------
-# CONFIGURACIÓN REST FRAMEWORK (FINAL)
-# ---------------------------------------------------------
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-
-    # 🔥 PERMITE QUE EL FRONTEND USE LA API SIN LOGIN
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ],
-
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-}
-
-# ---------------------------------------------------------
-# CONFIGURACIÓN CORS (CORREGIDA)
-# ---------------------------------------------------------
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
-
-CORS_ALLOW_METHODS = ["*"]
-CORS_ALLOW_HEADERS = ["*"]
-CORS_ALLOW_CREDENTIALS = True

@@ -1,8 +1,9 @@
-// src/api.js
 import axios from "axios";
 
+// URL backend Django
 const API_URL = "http://127.0.0.1:8000";
 
+// Instancia de axios
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -10,56 +11,42 @@ const api = axios.create({
   },
 });
 
-// ---------------------------
-// TOKEN: guardar / cargar
-// ---------------------------
-
-export const setAuthToken = (token) => {
-  if (token) {
-    localStorage.setItem("token", token);
-    api.defaults.headers.common["Authorization"] = `Token ${token}`;
-  } else {
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
-  }
-};
-
-export const getStoredToken = () => {
+// Obtener token guardado
+export function getStoredToken() {
   return localStorage.getItem("token");
-};
-
-// Al iniciar la app, si hay token guardado → usarlo
-const stored = getStoredToken();
-if (stored) {
-  api.defaults.headers.common["Authorization"] = `Token ${stored}`;
 }
 
-// ---------------------------
-//         LOGIN
-// ---------------------------
+// Guardar token y aplicarlo
+export function setAuthToken(token) {
+  localStorage.setItem("token", token);
+  api.defaults.headers.common["Authorization"] = `Token ${token}`;
+}
 
-export const login = async (username, password) => {
-  const res = await api.post("/api/token/login/", {
-    username,
-    password,
-  });
+// Cargar token si ya existe
+const token = getStoredToken();
+if (token) {
+  api.defaults.headers.common["Authorization"] = `Token ${token}`;
+}
 
-  const token = res.data.token;
-  setAuthToken(token);
+// --------------------
+// LOGIN
+// --------------------
+export async function login(username, password) {
+  const response = await api.post("/api/login/", { username, password });
+  return response.data; // { token: "..." }
+}
 
-  return res.data;
-};
+// --------------------
+// PRODUCTOS
+// --------------------
+export async function getProductos() {
+  const response = await api.get("/api/productos/");
+  return response.data;
+}
 
-// ---------------------------
-//        PRODUCTOS
-// ---------------------------
+export async function crearProducto(data) {
+  const response = await api.post("/api/productos/", data);
+  return response.data;
+}
 
-export const getProductos = async () => {
-  const res = await api.get("/api/productos/");
-  return res.data.results || [];
-};
-
-export const crearProducto = async (data) => {
-  const res = await api.post("/api/productos/", data);
-  return res.data;
-};
+export default api;
