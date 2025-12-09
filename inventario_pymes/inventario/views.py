@@ -9,10 +9,9 @@ from .serializers import (
     MovimientoStockSerializer
 )
 
-
-# ----------------------------
-# CATEGORÍA
-# ----------------------------
+# ============================================
+#   CATEGORÍA
+# ============================================
 
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
@@ -24,9 +23,9 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     ordering_fields = ["nombre"]
 
 
-# ----------------------------
-# PROVEEDOR
-# ----------------------------
+# ============================================
+#   PROVEEDOR
+# ============================================
 
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
@@ -38,9 +37,9 @@ class ProveedorViewSet(viewsets.ModelViewSet):
     ordering_fields = ["nombre"]
 
 
-# ----------------------------
-# PRODUCTO
-# ----------------------------
+# ============================================
+#   PRODUCTO
+# ============================================
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
@@ -63,9 +62,9 @@ class ProductoViewSet(viewsets.ModelViewSet):
     ordering_fields = ["nombre", "sku", "stock", "precio"]
 
 
-# ----------------------------
-# MOVIMIENTO DE STOCK
-# ----------------------------
+# ============================================
+#   MOVIMIENTO DE STOCK
+# ============================================
 
 class MovimientoStockViewSet(viewsets.ModelViewSet):
     queryset = MovimientoStock.objects.all()
@@ -86,3 +85,30 @@ class MovimientoStockViewSet(viewsets.ModelViewSet):
 
     search_fields = ["nota", "producto__nombre"]
     ordering_fields = ["fecha", "cantidad"]
+
+
+# ============================================
+#   LOGIN PARA REACT
+# ============================================
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data.get("username")
+    password = request.data.get("password")
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return Response({"error": "Credenciales inválidas"}, status=400)
+
+    token, created = Token.objects.get_or_create(user=user)
+
+    return Response({"token": token.key})

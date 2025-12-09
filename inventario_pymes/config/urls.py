@@ -1,13 +1,13 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework.authtoken.views import obtain_auth_token
 
 from inventario.views import (
     CategoriaViewSet,
     ProveedorViewSet,
     ProductoViewSet,
-    MovimientoStockViewSet
+    MovimientoStockViewSet,
+    login_view
 )
 
 # Swagger
@@ -25,7 +25,7 @@ schema_view = get_schema_view(
     openapi.Info(
         title="API Inventario PYMES",
         default_version='v1',
-        description="Documentación del sistema de inventario para PYMEs (versión en español)",
+        description="Documentación del sistema inventario PYMES"
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
@@ -34,11 +34,11 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # API principal
+    # API con todos los ViewSet
     path('api/', include(router.urls)),
 
-    # LOGIN por token → se usa en el FRONTEND
-    path('api/login/', obtain_auth_token),
+    # LOGIN (🔥 ESTE ES EL QUE FALTABA)
+    path('api/login/', login_view, name='api_login'),
 
     # Swagger
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),

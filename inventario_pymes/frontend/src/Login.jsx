@@ -14,20 +14,20 @@ export default function Login({ onLogin }) {
     setError("");
 
     try {
-      // Llama a la función login del api.js
+      // Llama a la función login definida en api.js
       const res = await login(form.username, form.password);
 
       // res = { token: "xxxx" }
       const token = res.token;
 
-      // Guarda token
+      // Guarda token en localStorage + axios
       setAuthToken(token);
 
-      // Activa login en App.jsx
+      // Cambia estado a logueado en App.jsx
       onLogin();
 
     } catch (err) {
-      console.error(err);
+      console.error("Error login:", err);
       setError("Usuario o contraseña incorrectos");
     }
   };

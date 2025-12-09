@@ -96,3 +96,10 @@ class MovimientoStockSerializer(serializers.ModelSerializer):
             return MovimientoStock.objects.create(**validated_data)
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message_dict)
+# ----------------------------
+# LOGIN SERIALIZER (NUEVO)
+# ----------------------------
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
