@@ -1,7 +1,21 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, filters
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+    IsAdminUser
+)
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
-from .models import Categoria, Proveedor, Producto, MovimientoStock
+from .models import (
+    Categoria,
+    Proveedor,
+    Producto,
+    MovimientoStock
+)
 from .serializers import (
     CategoriaSerializer,
     ProveedorSerializer,
@@ -9,42 +23,80 @@ from .serializers import (
     MovimientoStockSerializer
 )
 
-# ============================================
-#   CATEGORÍA
-# ============================================
+from .ai import (
+    sugerencia_reposicion,
+    detectar_anomalias_salida,
+    sugerir_categoria_por_texto
+)
+
+# =====================================================
+# UTILIDAD DE AUDITORÍA
+# =====================================================
+
+def log_accion(usuario, accion, objeto):
+    print(
+        f"[AUDITORÍA] Empresa={usuario.empresa} | "
+        f"Usuario={usuario.username} | "
+        f"Acción={accion} | "
+        f"Objeto={objeto}"
+    )
+
+
+# =====================================================
+# CATEGORÍA (ADMIN – POR EMPRESA)
+# =====================================================
 
 class CategoriaViewSet(viewsets.ModelViewSet):
-    queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["nombre"]
     ordering_fields = ["nombre"]
 
+    def get_queryset(self):
+        return Categoria.objects.filter(
+            empresa=self.request.user.empresa
+        )
 
-# ============================================
-#   PROVEEDOR
-# ============================================
+    def perform_create(self, serializer):
+        instancia = serializer.save(
+            empresa=self.request.user.empresa
+        )
+        log_accion(self.request.user, "CREAR_CATEGORIA", instancia)
+
+
+# =====================================================
+# PROVEEDOR (ADMIN – POR EMPRESA)
+# =====================================================
 
 class ProveedorViewSet(viewsets.ModelViewSet):
-    queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["nombre", "correo"]
     ordering_fields = ["nombre"]
 
+    def get_queryset(self):
+        return Proveedor.objects.filter(
+            empresa=self.request.user.empresa
+        )
 
-# ============================================
-#   PRODUCTO
-# ============================================
+    def perform_create(self, serializer):
+        instancia = serializer.save(
+            empresa=self.request.user.empresa
+        )
+        log_accion(self.request.user, "CREAR_PROVEEDOR", instancia)
+
+
+# =====================================================
+# PRODUCTO (ADMIN – POR EMPRESA)
+# =====================================================
 
 class ProductoViewSet(viewsets.ModelViewSet):
-    queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     filter_backends = [
         DjangoFilterBackend,
@@ -61,15 +113,25 @@ class ProductoViewSet(viewsets.ModelViewSet):
     search_fields = ["nombre", "sku"]
     ordering_fields = ["nombre", "sku", "stock", "precio"]
 
+    def get_queryset(self):
+        return Producto.objects.filter(
+            empresa=self.request.user.empresa
+        )
 
-# ============================================
-#   MOVIMIENTO DE STOCK
-# ============================================
+    def perform_create(self, serializer):
+        instancia = serializer.save(
+            empresa=self.request.user.empresa
+        )
+        log_accion(self.request.user, "CREAR_PRODUCTO", instancia)
+
+
+# =====================================================
+# MOVIMIENTO DE STOCK (USUARIOS DE LA EMPRESA)
+# =====================================================
 
 class MovimientoStockViewSet(viewsets.ModelViewSet):
-    queryset = MovimientoStock.objects.all()
     serializer_class = MovimientoStockSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [
         DjangoFilterBackend,
@@ -86,74 +148,106 @@ class MovimientoStockViewSet(viewsets.ModelViewSet):
     search_fields = ["nota", "producto__nombre"]
     ordering_fields = ["fecha", "cantidad"]
 
+    def get_queryset(self):
+        return MovimientoStock.objects.filter(
+            empresa=self.request.user.empresa
+        )
 
-# ============================================
-#   LOGIN PARA REACT
-# ============================================
+    def perform_create(self, serializer):
+        instancia = serializer.save(
+            empresa=self.request.user.empresa
+        )
+        log_accion(self.request.user, "MOVIMIENTO_STOCK", instancia)
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
 
+# =====================================================
+# LOGIN (PÚBLICO)
+# =====================================================
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
+    user = authenticate(
+        username=request.data.get("username"),
+        password=request.data.get("password")
+    )
 
-    user = authenticate(username=username, password=password)
+    if user is None or not user.is_active:
+        return Response(
+            {"error": "Credenciales inválidas"},
+            status=400
+        )
 
-    if user is None:
-        return Response({"error": "Credenciales inválidas"}, status=400)
+    token, _ = Token.objects.get_or_create(user=user)
 
-    token, created = Token.objects.get_or_create(user=user)
+    return Response({
+        "token": token.key,
+        "username": user.username,
+        "empresa": user.empresa.nombre,
+        "rol": "ADMIN" if user.is_staff else "USUARIO"
+    })
 
-    return Response({"token": token.key})
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-
-from .models import Producto, Categoria
-from .ai import sugerencia_reposicion, detectar_anomalias_salida, sugerir_categoria_por_texto
+# =====================================================
+# IA – REPOSICIÓN (ADMIN – POR EMPRESA)
+# =====================================================
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def ai_reposicion(request):
-    dias_hist = int(request.query_params.get("dias_hist", 30))
-    cubrir = int(request.query_params.get("cubrir", 14))
+    productos = Producto.objects.filter(
+        empresa=request.user.empresa
+    )
 
-    data = [sugerencia_reposicion(p, dias_hist=dias_hist, cubrir_dias=cubrir)
-            for p in Producto.objects.all().order_by("id")]
+    data = [
+        sugerencia_reposicion(p)
+        for p in productos.order_by("id")
+    ]
+
     return Response(data)
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def ai_anomalias(request):
-    dias = int(request.query_params.get("dias", 30))
-    factor = float(request.query_params.get("factor", 3.0))
 
-    out = []
-    for p in Producto.objects.all():
-        out.extend(detectar_anomalias_salida(p, dias=dias, factor=factor))
-    return Response(out)
+# =====================================================
+# IA – ANOMALÍAS (ADMIN – POR EMPRESA)
+# =====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def ai_anomalias(request):
+    productos = Producto.objects.filter(
+        empresa=request.user.empresa
+    )
+
+    resultados = []
+    for p in productos:
+        resultados.extend(
+            detectar_anomalias_salida(p)
+        )
+
+    return Response(resultados)
+
+
+# =====================================================
+# IA – SUGERIR CATEGORÍA
+# =====================================================
 
 @api_view(["POST"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def ai_sugerir_categoria(request):
-    nombre = request.data.get("nombre", "")
-    descripcion = request.data.get("descripcion", "")
+    sugerida = sugerir_categoria_por_texto(
+        request.data.get("nombre", ""),
+        request.data.get("descripcion", "")
+    )
 
-    sugerida = sugerir_categoria_por_texto(nombre, descripcion)
     if not sugerida:
         return Response({"categoria_sugerida": None})
 
-    # opcional: si existe en BD, también devuelve su ID
-    cat = Categoria.objects.filter(nombre__iexact=sugerida).first()
+    categoria = Categoria.objects.filter(
+        empresa=request.user.empresa,
+        nombre__iexact=sugerida
+    ).first()
+
     return Response({
         "categoria_sugerida": sugerida,
-        "categoria_id": cat.id if cat else None
+        "categoria_id": categoria.id if categoria else None
     })

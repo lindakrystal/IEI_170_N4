@@ -1,12 +1,40 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.contrib.auth.models import User
+
+# =====================================================
+#   EMPRESA (CLIENTE)
+# =====================================================
+
+class Empresa(models.Model):
+    nombre = models.CharField(max_length=150, unique=True)
+    rut = models.CharField(max_length=20, blank=True)
+    correo = models.EmailField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    direccion = models.CharField(max_length=255, blank=True)
+    activa = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Empresa"
+        verbose_name_plural = "Empresas"
+
+    def __str__(self):
+        return self.nombre
+
+
+# =====================================================
+#   CATEGORÍA
+# =====================================================
 
 class Categoria(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
 
     class Meta:
+        unique_together = ("empresa", "nombre")
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
 
@@ -14,7 +42,12 @@ class Categoria(models.Model):
         return self.nombre
 
 
+# =====================================================
+#   PROVEEDOR
+# =====================================================
+
 class Proveedor(models.Model):
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
     nombre = models.CharField(max_length=150)
     correo = models.EmailField(blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True)
@@ -28,8 +61,13 @@ class Proveedor(models.Model):
         return self.nombre
 
 
+# =====================================================
+#   PRODUCTO
+# =====================================================
+
 class Producto(models.Model):
-    sku = models.CharField(max_length=50, unique=True)
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    sku = models.CharField(max_length=50)
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField(blank=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT)
@@ -39,6 +77,7 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
+        unique_together = ("empresa", "sku")
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
 
@@ -52,6 +91,10 @@ class Producto(models.Model):
         return f"{self.sku} - {self.nombre}"
 
 
+# =====================================================
+#   MOVIMIENTO DE STOCK
+# =====================================================
+
 class MovimientoStock(models.Model):
     ENTRADA = 'IN'
     SALIDA = 'OUT'
@@ -61,7 +104,12 @@ class MovimientoStock(models.Model):
         (SALIDA, 'Salida'),
     ]
 
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="movimientos")
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        related_name="movimientos"
+    )
     tipo = models.CharField(max_length=3, choices=TIPOS)
     cantidad = models.PositiveIntegerField()
     fecha = models.DateTimeField(auto_now_add=True)
@@ -79,6 +127,7 @@ class MovimientoStock(models.Model):
         self.full_clean()
         with transaction.atomic():
             producto = Producto.objects.select_for_update().get(pk=self.producto_id)
+
             if self.tipo == self.ENTRADA:
                 producto.stock += self.cantidad
             else:

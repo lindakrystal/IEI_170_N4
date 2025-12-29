@@ -24,10 +24,10 @@ from rest_framework import permissions
 # ============================
 
 router = DefaultRouter()
-router.register(r'categorias', CategoriaViewSet)
-router.register(r'proveedores', ProveedorViewSet)
-router.register(r'productos', ProductoViewSet)
-router.register(r'movimientos', MovimientoStockViewSet)
+router.register(r'categorias', CategoriaViewSet, basename='categoria')
+router.register(r'proveedores', ProveedorViewSet, basename='proveedor')
+router.register(r'productos', ProductoViewSet, basename='producto')
+router.register(r'movimientos', MovimientoStockViewSet, basename='movimiento')
 
 
 # ============================
@@ -60,7 +60,7 @@ urlpatterns = [
     path('api/login/', login_view, name='api_login'),
 
     # ========================
-    # IA 🔥
+    # IA 🤖
     # ========================
     path('api/ia/reposicion/', ai_reposicion, name='ai_reposicion'),
     path('api/ia/anomalias/', ai_anomalias, name='ai_anomalias'),
