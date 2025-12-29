@@ -21,7 +21,7 @@ SECRET_KEY = os.environ.get(
     "django-insecure-dev-key-solo-para-local"
 )
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "inventario-pro-34fw.onrender.com",
@@ -29,19 +29,26 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
-# Render / proxy HTTPS
+# Render usa HTTPS vía proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# 🔑 CLAVE PARA SOLUCIONAR ERROR 500 EN /admin/login
+# CSRF (CLAVE para evitar error 500 en /admin/login)
 CSRF_TRUSTED_ORIGINS = [
     "https://inventario-pro-34fw.onrender.com",
 ]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SAMESITE = "None"
 
 # =========================================================
 # APPS
 # =========================================================
 
 INSTALLED_APPS = [
+    # Django base
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -62,7 +69,7 @@ INSTALLED_APPS = [
     # CORS
     "corsheaders",
 
-    # App
+    # App principal
     "inventario",
 ]
 
@@ -136,7 +143,7 @@ REST_FRAMEWORK = {
 }
 
 # =========================================================
-# CORS (solo frontend)
+# CORS (FRONTEND LOCAL)
 # =========================================================
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -156,7 +163,7 @@ USE_I18N = True
 USE_TZ = True
 
 # =========================================================
-# STATIC FILES (CRÍTICO PARA ADMIN)
+# STATIC FILES (ADMIN)
 # =========================================================
 
 STATIC_URL = "/static/"
