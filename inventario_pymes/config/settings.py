@@ -1,6 +1,6 @@
 """
 Django settings for config project.
-Preparado para PRODUCCIÓN (venta / nube)
+Preparado para PRODUCCIÓN en Render (sin dominio propio)
 """
 
 from pathlib import Path
@@ -21,22 +21,27 @@ SECRET_KEY = os.environ.get(
     "django-insecure-dev-key-solo-para-local"
 )
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
-).split(",")
+ALLOWED_HOSTS = [
+    "inventario-pro-34fw.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
-# Necesario para HTTPS en Render / Railway / etc.
+# Render / proxy HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# 🔑 CLAVE PARA SOLUCIONAR ERROR 500 EN /admin/login
+CSRF_TRUSTED_ORIGINS = [
+    "https://inventario-pro-34fw.onrender.com",
+]
 
 # =========================================================
 # APPS
 # =========================================================
 
 INSTALLED_APPS = [
-    # Django base
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -44,7 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Django REST
+    # DRF
     "rest_framework",
     "rest_framework.authtoken",
 
@@ -57,7 +62,7 @@ INSTALLED_APPS = [
     # CORS
     "corsheaders",
 
-    # App principal
+    # App
     "inventario",
 ]
 
@@ -77,13 +82,14 @@ MIDDLEWARE = [
 ]
 
 # =========================================================
-# URLS
+# URLS / WSGI
 # =========================================================
 
 ROOT_URLCONF = "config.urls"
+WSGI_APPLICATION = "config.wsgi.application"
 
 # =========================================================
-# TEMPLATES
+# TEMPLATES (ADMIN)
 # =========================================================
 
 TEMPLATES = [
@@ -103,13 +109,7 @@ TEMPLATES = [
 ]
 
 # =========================================================
-# WSGI
-# =========================================================
-
-WSGI_APPLICATION = "config.wsgi.application"
-
-# =========================================================
-# BASE DE DATOS
+# DATABASE
 # =========================================================
 
 DATABASES = {
@@ -120,7 +120,7 @@ DATABASES = {
 }
 
 # =========================================================
-# DRF / SEGURIDAD
+# DRF
 # =========================================================
 
 REST_FRAMEWORK = {
@@ -136,18 +136,15 @@ REST_FRAMEWORK = {
 }
 
 # =========================================================
-# CORS
+# CORS (solo frontend)
 # =========================================================
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # solo en desarrollo
+CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
-
-CORS_ALLOW_HEADERS = ["*"]
-CORS_ALLOW_METHODS = ["*"]
 
 # =========================================================
 # INTERNACIONALIZACIÓN
@@ -159,7 +156,7 @@ USE_I18N = True
 USE_TZ = True
 
 # =========================================================
-# ESTÁTICOS
+# STATIC FILES (CRÍTICO PARA ADMIN)
 # =========================================================
 
 STATIC_URL = "/static/"
