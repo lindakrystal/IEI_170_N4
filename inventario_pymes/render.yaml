@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: inventario-pro
+    env: python
+    buildCommand: |
+      cd inventario_pymes
+      pip install -r ../requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: |
+      cd inventario_pymes
+      gunicorn config.wsgi:application
